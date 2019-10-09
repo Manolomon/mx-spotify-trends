@@ -1,0 +1,99 @@
+---
+title: "Análisis de Características Musicales en el Top 50 de Spotify"
+author: "Manuel Perez"
+date: "10/8/2019"
+output: 
+  html_document: 
+    highlight: tango
+    theme: paper
+---
+
+## Extracción de Base de Datos
+
+Los datos del histórico de Top Chart se obtienen a partir del módulo `topsipy.spotipy` en `python`. De esta forma, se generan las tablas Top 50 dentro de un intervalo de tiempo, y se hace la petición para obtener las `audio features` de cada canción en Spotify.
+
+
+```python
+from topsipy import spotipy
+
+token = 'spotify_acces_token' # https://developer.spotify.com/console/get-audio-features-track/
+
+chart = spotipy.generate_top_chart(access_token=token, start='2019-01-01', end='2019-09-26', region='mx')
+```
+
+Así, se obtiene como valor de retorno una estructura `pandas.DataFrame` como la siguiente:
+
+```sh
+>>> chart
+       Position            Track Name        Artist  ...    tempo time_signature valence
+13400         1                 China      Anuel AA  ...  105.027              4   0.609
+13401         2            LA CANCIÓN      J Balvin  ...  176.089              4   0.429
+13402         3              Callaita     Bad Bunny  ...  176.169              4   0.244
+13403         4                  Tutu        Camilo  ...  146.013              4   0.940
+13404         5  No Me Conoce - Remix   Jhay Cortez  ...   91.973              4   0.580
+13405         6                 11 PM        Maluma  ...   95.692              4   0.680
+13406         7              Señorita  Shawn Mendes  ...  116.967              4   0.749
+13407         8      Yo x Ti, Tu x Mi       ROSALÍA  ...   91.952              4   0.579
+13408         9       Soltera - Remix         Lunay  ...   92.016              4   0.800
+13409        10         QUE PRETENDES      J Balvin  ...   92.603              4   0.939
+
+```
+
+## Lectura de archivos generados
+
+A partir del metodo anterior, se generaron 4 diferentes bases de datos, 
+
+```{r}
+library(reticulate)
+```
+
+```{python}
+import pandas as pd
+
+data = pd.read_csv('./sources/daily-2019-mx.csv', encoding='utf-8')
+top_1 = data[data['Position'] == 1].drop_duplicates('Track Id')
+top_1 = top_1[['Track Name', 'acousticness', 'danceability', 
+    'energy', 'instrumentalness', 'valence']]
+top_1
+
+```
+
+## Características canciones en el Top 1 de 2019
+
+
+```{r fig1, fig.height = 6, fig.width = 10, fig.align = 'left'}
+# Library
+library(fmsb)
+ 
+# Create data: note in High school for several students
+data = py$top_1
+chart <- data[,-1]
+rownames(chart) <- data[,1]
+
+chart <- rbind(rep(1,5) , rep(0,5) , chart)
+
+# Set graphic colors
+library(RColorBrewer)
+coul <- brewer.pal(nrow(data), "Paired")
+colors_border <- coul
+library(scales)
+colors_in <- alpha(coul,0.1)
+
+# plot with default options:
+radarchart( chart  , axistype=1 , 
+    #custom polygon
+    pcol=colors_border , pfcol=colors_in, plwd=2 , plty=1,
+    #custom the grid
+    cglcol="grey", cglty=1, axislabcol="black", caxislabels=seq(0,1,5), cglwd=0.8,
+    #custom labels
+    vlcex=1
+    )
+
+# Add a legend
+legend(x=1.4, y=1, legend = rownames(chart[-c(1,2),]), 
+       bty = "n", pch=20 , col=colors_border , text.col = "#263238", cex=1, pt.cex=3)
+```
+
+## Danceability
+
+![Spotify Danceability Selection](https://developer.spotify.com/assets/audio/danceability.png)
