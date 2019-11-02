@@ -41,20 +41,32 @@ Así, se obtiene como valor de retorno una estructura `pandas.DataFrame` como la
 
 ## Lectura de archivos generados
 
-A partir del metodo anterior, se generaron 4 diferentes bases de datos, 
-
-```{r}
-library(reticulate)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{python}
-import pandas as pd
+import sys
+print(sys.version)
+```
 
-data = pd.read_csv('./sources/daily-2019-mx.csv', encoding='utf-8')
-top_1 = data[data['Position'] == 1].drop_duplicates('Track Id')
-top_1 = top_1[['Track Name', 'acousticness', 'danceability', 
-    'energy', 'instrumentalness', 'valence']]
-top_1
+```{python, engine.path = '/usr/local/bin/python3.7'}
+import sys
+print(sys.version)
+```
+
+A partir del metodo anterior, se generaron 4 diferentes bases de datos, 
+
+```{r setup, include=FALSE}
+library(reticulate)
+use_python("/usr/local/bin/python3.7")
+```
+
+
+```{python, engine.path="/Desktop/Github/mx-spotify-trends/venv/bin/python3.7"}
+
+import sys
+print(sys.executable)
 
 ```
 
