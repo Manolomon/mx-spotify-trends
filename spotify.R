@@ -1,34 +1,57 @@
-### VISUALIZACION GENERAL ###
-base<-read.delim("./sources/daily-2019-global.csv")
-head(base)
-summary(base)
+
+install.packages("readr")
+library(readr)
+
+global<-read_csv("spotify.csv")
+global
+
+summary(global)
+
+
 
 ### BASE CON VAR. CUANTITATIVAS ###
 b<-read.delim("clipboard")
 head(b)
 summary(b)
+b<-(global[2:3])
+b
 
 # var con valores [0,1] (6)
-b1<-read.delim("clipboard")
-head(b1)
+
+a<-(global[8:9])
+a
+a1<-(global[11])
+a1
+a2<-(global[14])
+a2
+a3<-(global[17])
+a3
+a4<-(global[20])
+a4
+
+b1<-cbind(a,a1,a2,a3,a4)
+b1
 
 # var con valores [1,300] (2)
-b2<-read.delim("clipboard")
+bb2<-global[10]
+bbb2<-global[18]
+b2<-cbind(bb2,bbb2)
 head(b2)
 
 # var con valores [>99900] (1)
-b3<-read.delim("clipboard")
-head(b3)
+b3<-global[4]
+b3
 
 # var con valores [<0] (1)
-b4<-read.delim("clipboard")
-head(b4)
+b4<-global[15]
+b4
 
 # var con valores [casi 0] (1)
-b5<-read.delim("clipboard")
-head(b5)
+b5<-global[12]
+b5
 
 #base 50
+global[]
 b50m<-read.delim("clipboard")
 head(b50m)
 summary(b50m)
@@ -36,6 +59,8 @@ summary(b50m)
 b50g<-read.delim("clipboard")
 head(b50g)
 summary(b50g)
+
+excel_spoty<-read.excel("")
 
 ### ANALISIS UNIVARIADO ###
 boxplot(b1, ylab="Y", main="?nalisis univariado")

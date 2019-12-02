@@ -41,20 +41,6 @@ Así, se obtiene como valor de retorno una estructura `pandas.DataFrame` como la
 
 ## Lectura de archivos generados
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{python}
-import sys
-print(sys.version)
-```
-
-```{python, engine.path = '/usr/local/bin/python3.7'}
-import sys
-print(sys.version)
-```
-
 A partir del metodo anterior, se generaron 4 diferentes bases de datos, 
 
 ```{r setup, include=FALSE}
@@ -62,18 +48,19 @@ library(reticulate)
 use_python("/usr/local/bin/python3.7")
 ```
 
+```{python}
+import pandas as pd
 
-```{python, engine.path="/Desktop/Github/mx-spotify-trends/venv/bin/python3.7"}
-
-import sys
-print(sys.executable)
-
+data = pd.read_csv('./sources/daily-2019-mx.csv', encoding='utf-8')
+top_1 = data[data['Position'] == 1].drop_duplicates('Track Id')
+top_1 = top_1[['Track Name', 'acousticness', 'danceability','energy', 'instrumentalness', 'valence']]
+top_1
 ```
 
 ## Características canciones en el Top 1 de 2019
 
 
-```{r fig1, fig.height = 6, fig.width = 10, fig.align = 'left'}
+```{r fig1, fig.height = 4, fig.width = 6, fig.align = 'right'}
 # Library
 library(fmsb)
  
@@ -106,6 +93,317 @@ legend(x=1.4, y=1, legend = rownames(chart[-c(1,2),]),
        bty = "n", pch=20 , col=colors_border , text.col = "#263238", cex=1, pt.cex=3)
 ```
 
-## Danceability
+```{python}
+data = pd.read_csv('./sources/daily-2019-global.csv', encoding='utf-8')
+top_2 = data[data['Position'] == 1].drop_duplicates('Track Id').drop_duplicates('Track Name')
+top_2 = top_2[['Track Name', 'acousticness', 'danceability','energy', 'instrumentalness', 'valence']]
+top_2
 
-![Spotify Danceability Selection](https://developer.spotify.com/assets/audio/danceability.png)
+```
+
+## Características canciones en el Top 1 de 2019
+
+
+```{r fig2, fig.height = 4, fig.width = 6, fig.align = 'left'}
+# Library
+library(fmsb)
+ 
+# Create data: note in High school for several students
+data = py$top_2
+chart <- data[,-1]
+rownames(chart) <- data[,1]
+
+chart <- rbind(rep(1,5) , rep(0,5) , chart)
+
+# Set graphic colors
+library(RColorBrewer)
+coul <- brewer.pal(nrow(data), "Paired")
+colors_border <- coul
+library(scales)
+colors_in <- alpha(coul,0.1)
+
+# plot with default options:
+radarchart( chart  , axistype=1 , 
+    #custom polygon
+    pcol=colors_border , pfcol=colors_in, plwd=2 , plty=1,
+    #custom the grid
+    cglcol="grey", cglty=1, axislabcol="black", caxislabels=seq(0,1,5), cglwd=0.8,
+    #custom labels
+    vlcex=1
+    )
+
+# Add a legend
+legend(x=1.4, y=1, legend = rownames(chart[-c(1,2),]), 
+       bty = "n", pch=20 , col=colors_border , text.col = "#263238", cex=1, pt.cex=3)
+```
+
+```{python}
+import seaborn as sns
+import seaborn.timeseries
+import numpy as np
+import matplotlib.pyplot as plt
+
+dateparse = lambda x: pd.datetime.strptime(x, '%Y-%m-%d')
+
+global_chart = pd.read_csv('./sources/daily-2019-global.csv', parse_dates=['Date'], date_parser=dateparse)
+mx_chart  = pd.read_csv('./sources/daily-2019-mx.csv', parse_dates=['Date'], date_parser=dateparse)
+global_chart['Chart'] = 'Global'
+mx_chart['Chart'] = 'Mexico'
+
+resume = pd.concat([global_chart,mx_chart],keys=['Global','Mexico'])
+```
+
+```{python}
+from pandas.plotting import register_matplotlib_converters
+
+register_matplotlib_converters()
+
+spotiui = ["#57B560", "#E99E42", "#D9383B", "#5F9CEE", "#5C8F7E", "#F7CFD3"]
+
+
+
+plt.rcParams["figure.figsize"] = [20,10]
+sns.set()
+sns.set_palette(spotiui)
+
+fig = plt.figure()
+fig.subplots_adjust(hspace=0.4, wspace=0.1)
+ax = fig.add_subplot(4, 2, 1)
+sns.lineplot(x="Date", y="acousticness", data=resume, ci=None, hue='Chart')
+ax = fig.add_subplot(4, 2, 2)
+sns.lineplot(x="Date", y="liveness", data=resume, ci=None, hue='Chart')
+ax = fig.add_subplot(4, 2, 3)
+sns.lineplot(x="Date", y="danceability", data=resume, ci=None, hue='Chart')
+ax = fig.add_subplot(4, 2, 4)
+sns.lineplot(x="Date", y="loudness", data=resume, ci=None, hue='Chart')
+ax = fig.add_subplot(4, 2, 5)
+sns.lineplot(x="Date", y="energy", data=resume, ci=None, hue='Chart')
+ax = fig.add_subplot(4, 2, 6)
+sns.lineplot(x="Date", y="speechiness", data=resume, ci=None, hue='Chart')
+ax = fig.add_subplot(4, 2, 7)
+sns.lineplot(x="Date", y="instrumentalness", data=resume, ci=None, hue='Chart')
+ax = fig.add_subplot(4, 2, 8)
+sns.lineplot(x="Date", y="valence", data=resume, ci=None, hue='Chart')
+plt.show()
+```
+
+```{python}
+mx_chart = mx_chart.drop_duplicates('Track Id')
+plt.rcParams["figure.figsize"] = [16,6]
+sns.boxplot(data=mx_chart[['acousticness','danceability', 'energy', 'liveness', 'speechiness', 'valence']])
+plt.show()
+```
+
+```{python}
+global_chart = global_chart.drop_duplicates('Track Id')
+global_chart = global_chart.drop_duplicates('Track Name')
+plt.rcParams["figure.figsize"] = [16,6]
+sns.boxplot(data=global_chart[['acousticness','danceability', 'energy', 'liveness', 'speechiness', 'valence']])
+plt.show()
+```
+
+```{python}
+global_emotion = pd.read_csv('./sources/daily-2019-global-unique-emotion.csv', parse_dates=['Date'], date_parser=dateparse)
+global_emotion=global_emotion.rename(columns = {'Track Name':'track_name'})
+global_emotion = global_emotion.drop_duplicates('track_name')
+global_emotion
+```
+
+```{python}
+from bokeh.plotting import figure, output_file, show
+from bokeh.models.tools import HoverTool
+from bokeh.models import BoxAnnotation, TapTool
+from bokeh.io import output_notebook
+
+output_notebook()
+
+colormap = {'happy': 'orange', 'excited': 'red', 'sad': 'blue', 'peacefull': 'green'}
+colors = [colormap[x] for x in global_emotion['emotion']]
+global_emotion['color'] = colors
+
+p = figure(title = "Emotions")
+p.xaxis.axis_label = 'Valence'
+p.yaxis.axis_label = 'Arousal(Energy)'
+
+p.circle('valence', 'energy',source=global_emotion,legend_group='emotion',
+         color='color', fill_alpha=0.2, size=10)
+
+green_box = BoxAnnotation(left=0.499, right=0.501, fill_color='black', fill_alpha=0.7)
+p.add_layout(green_box)
+
+green_box = BoxAnnotation(bottom=0.499, top=0.501, fill_color='black', fill_alpha=0.7)
+p.add_layout(green_box)
+
+hover=HoverTool()
+hover.tooltips=[
+    ('Track Name','@track_name'),
+    ('Artist', '@Artist'),
+    ('Valence','@valence'),
+    ('Energy','@energy')
+]
+p.add_tools(hover, TapTool())
+p.legend.location = "top_left"
+
+show(p)
+```
+
+```{python}
+mx_chart = pd.read_csv('./sources/daily-2019-mx.csv', parse_dates=['Date'], date_parser=dateparse)
+top_1 = mx_chart[mx_chart['Position'] == 1]
+top_1 = top_1.drop_duplicates('Track Id')
+top_names = top_1['Track Id']
+top_names = list(top_names)
+
+top_tracks = mx_chart.loc[mx_chart['Track Id'].isin(top_names)]
+top_tracks.to_csv("./mexico_top1.csv", index=False)
+```
+
+```{python}
+sns.set()
+g = sns.relplot(x="Date", y="Position", kind="line", data=top_tracks, hue="Track Name")
+g.set(ylim=(50, -1))
+g._legend.remove()
+g.fig.set_size_inches(20,6)
+plt.show()
+```
+
+```{python}
+global_chart = pd.read_csv('./sources/daily-2019-global.csv', parse_dates=['Date'], date_parser=dateparse)
+top_1 = global_chart[global_chart['Position'] == 1]
+top_1 = top_1.drop_duplicates('Track Id')
+top_names = top_1['Track Id']
+top_names = list(top_names)
+
+global_top_tracks = global_chart.loc[global_chart['Track Id'].isin(top_names)]
+global_top_tracks.to_csv("./global_top1.csv", index=False)
+```
+
+```{python}
+g = sns.relplot(x="Date", y="Position", kind="line", data=global_top_tracks, hue="Track Name")
+g.set(ylim=(50, -1))
+g._legend.remove()
+g.fig.set_size_inches(30,6)
+plt.show()
+```
+
+```{r}
+library(streamgraph)
+ 
+# Create data:
+mx_streams <- read.csv(file='./mexico_top1.csv')
+ 
+# Basic stream graph: just give the 3 arguments
+pp <- streamgraph(mx_streams, key="Track.Name", value="Streams", date="Date", height="300px", width="700px")
+pp
+
+
+```
+
+```{r}
+library(streamgraph)
+ 
+# Create data:
+global_streams <- read.csv(file='./global_top1.csv')
+ 
+# Basic stream graph: just give the 3 arguments
+pp <- streamgraph(global_streams, key="Track.Name", value="Streams", date="Date", height="300px", width="700px")%>%
+    sg_fill_brewer("Set3")
+pp 
+
+```
+
+```r
+library(dplyr)
+library(shiny)
+
+ui = shinyUI(fluidPage(
+  h3("Streams Dynamics in the Global Top 1", style="text-align:center"),
+  streamgraphOutput('sg1')
+))
+
+server = function(input, output) {
+
+  sgexample<-streamgraph(global_streams, key="Track.Name", value="Streams", date="Date", height="300px", width="900px")%>%
+    sg_legend(show=TRUE, label="Track: ")%>%
+    sg_axis_x(1, "Streams")%>% sg_axis_y(0)
+
+  output$sg1 <- renderStreamgraph(sgexample)
+
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+```r
+ui = shinyUI(fluidPage(
+  h3("Streams Dynamics in the Mexico Top 1", style="text-align:center"),
+  streamgraphOutput('sg1')
+))
+
+server = function(input, output) {
+
+  sgexample<-streamgraph(mx_streams, key="Track.Name", value="Streams", date="Date", height="300px", width="900px")%>%
+    sg_legend(show=TRUE, label="Track: ")%>%
+    sg_axis_x(1, "ID")%>% sg_axis_y(0)
+
+  output$sg1 <- renderStreamgraph(sgexample)
+
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+```{python}
+mx_chart = mx_chart[['acousticness', 'danceability', 'energy', 'speechiness', 'valence', 'instrumentalness', 'loudness']]
+mxdata = mx_chart
+```
+
+```{r fig3, fig.height = 3, fig.width = 6, fig.align = 'right'}
+library(psych)
+library(dplyr)
+mxdata <- read.csv(file='./sources/daily-2019-mx.csv')
+mxdata <- mxdata[!duplicated(mxdata$Track.Id), ]
+mxdata <- mxdata[!duplicated(mxdata$Track.Name), ]
+pairs.panels(mxdata %>%
+  select(acousticness, danceability, energy, speechiness, valence, instrumentalness, loudness), 
+             method = "pearson", # correlation method
+             hist.col = "#57B560",
+             density = TRUE,  # show density plots
+             ellipses = TRUE # show correlation ellipses
+             )
+```
+
+```{r fig4, fig.height = 3, fig.width = 6, fig.align = 'right'}
+globaldata <- read.csv(file='./sources/daily-2019-global.csv')
+globaldata <- globaldata[!duplicated(globaldata$Track.Id), ]
+globaldata <- globaldata[!duplicated(globaldata$Track.Name), ]
+pairs.panels(globaldata %>%
+  select(acousticness, danceability, energy, speechiness, valence, instrumentalness, loudness), 
+             method = "pearson", # correlation method
+             hist.col = "#5F9CEE",
+             density = TRUE,  # show density plots
+             ellipses = TRUE, # show correlation ellipses
+             )
+```
+
+```{python}
+mx_chart  = pd.read_csv('./sources/daily-2019-mx.csv', parse_dates=['Date'], date_parser=dateparse)
+global_chart  = pd.read_csv('./sources/daily-2019-global.csv', parse_dates=['Date'], date_parser=dateparse)
+streams = mx_chart.groupby('Date')['Streams'].sum()
+streams.to_frame().to_csv('./mexico_streams.csv')
+global_streams = global_chart.groupby('Date')['Streams'].sum()
+global_streams.to_frame().to_csv('./global_streams.csv')
+```
+
+```{r}
+source("https://raw.githubusercontent.com/iascchen/VisHealth/master/R/calendarHeat.R")
+
+mx_streams <- read.csv(file='./mexico_streams.csv')
+calendarHeat(mx_streams$Date, mx_streams$Streams, ncolors = 99, color = "r2b", varname="Mexico's Top 50 Streams")
+```
+
+```{r}
+global_streams <- read.csv(file='./global_streams.csv')
+calendarHeat(global_streams$Date, global_streams$Streams, ncolors = 99, color = "r2b", varname="Top 50 Global Streams")
+```
+
