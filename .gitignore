@@ -1,6 +1,9 @@
 # Created by https://www.gitignore.io/api/r,python
 # Edit at https://www.gitignore.io/?templates=r,python
 
+### MacOS ###
+.DS_Store
+
 ### JupyterNotebooks ###
 # gitignore template for Jupyter Notebooks
 # website: http://jupyter.org/
